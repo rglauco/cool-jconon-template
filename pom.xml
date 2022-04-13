@@ -22,12 +22,12 @@
     <parent>
         <groupId>it.cnr.si.cool.jconon</groupId>
         <artifactId>cool-jconon-parent</artifactId>
-        <version>4.11.0</version>
+        <version>4.12.6</version>
     </parent>
 
     <artifactId>cool-jconon-template</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Concorsi On-Line Template</name>
+    <name>Concorsi On-Line Preganziol</name>
 
     <properties>
         <cool.mode>development</cool.mode>
@@ -41,10 +41,15 @@
             <groupId>it.cnr.si.cool.jconon</groupId>
             <artifactId>cool-jconon-webapp-resources</artifactId>
             <version>${project.parent.version}</version>
-    	</dependency>
+            <exclusions>
+                <exclusion>
+                    <groupId>it.cnr.si.cool.jconon</groupId>
+                    <artifactId>cool-jconon-keycloak</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
     <profiles>
-
         <profile>
             <id>prod</id>
             <properties>
@@ -190,7 +195,7 @@
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
-                            <Dependencies>org.dom4j,javax.mail.api</Dependencies>      
+                            <Dependencies>org.dom4j,javax.mail.api</Dependencies>
                             <Specification-Title>${project.name}</Specification-Title>
                             <Specification-Version>${project.version}</Specification-Version>
                             <Implementation-Version>${project.version}</Implementation-Version>
