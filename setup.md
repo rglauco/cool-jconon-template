@@ -210,3 +210,15 @@ sudo loginctl enable-linger $(whoami)
 Da questo momento il demone docker risulterà attivo solo con l’utente `userdocker` e la dir di appoggio è in `/home/userdocker/.local/share/docker/`
 
 Per poter aprire porte sotto la 1024 con user normale in /etc/sysctl.conf: `net.ipv4.ip_unprivileged_port_start=80`
+
+Per gestire la MTU e poter visualizzare e registrare l'ip reale dei client, creare il file `~/.config/systemd/user/docker.service.d/override.conf`:
+```
+[Service]
+Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_MTU=<INTEGER>"
+Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_PORT_DRIVER=slirp4netns"
+```
+e riavviare docker:
+```
+systemctl --user daemon-reload
+systemctl --user restart docker
+```
