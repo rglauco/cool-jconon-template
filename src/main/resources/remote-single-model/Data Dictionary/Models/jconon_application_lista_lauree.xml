@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~    Copyright (C) 2019  Consiglio Nazionale delle Ricerche
+  ~     This program is free software: you can redistribute it and/or modify
+  ~     it under the terms of the GNU Affero General Public License as
+  ~     published by the Free Software Foundation, either version 3 of the
+  ~     License, or (at your option) any later version.
+  ~
+  ~     This program is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~     GNU Affero General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU Affero General Public License
+  ~     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<model xmlns="http://www.alfresco.org/model/dictionary/1.0" name="jconon_application_lista_lauree:jconon_application_lista_laureeModel">
+	<description>JCONON Dynamic Model</description>
+	<author>marco.spasiano</author>
+	<version>0.1</version>
+	<imports>
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+		<import uri="http://www.cittametropolitanaroma.it/model/jconon_application/cmis" prefix="jconon_application"/>
+	</imports>
+	<namespaces>
+		<namespace uri="http://www.cnr.it/model/jconon_application_lista_lauree/cmis" prefix="jconon_application_lista_lauree"/>
+	</namespaces>
+	<constraints>
+		<constraint name="jconon_application_lista_lauree:values" type="LIST">
+			<parameter name="allowedValues">
+				<list>
+					<value>Diploma di Laurea (vecchio ordinamento) - Architettura</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria Civile</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria Edile</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria Edile – Architettura</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria per l’Ambiente e il Territorio</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria meccanica</value>
+                    <value>Diploma di Laurea (vecchio ordinamento) - Ingegneria elettrica</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Ingegneria elettrotecnica</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Pianificazione territoriale e urbanistica</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Pianificazione territoriale, urbanistica e ambientale</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Politica del territorio</value>
+					<value>Diploma di Laurea (vecchio ordinamento) - Urbanistica</value>
+					<value>Laurea Triennale D.M. n. 509/1999 - classe 4 - Scienze dell’Architettura e dell’Ingegneria Edile</value>
+					<value>Laurea Triennale D.M. n. 509/1999 - classe 7 - Urbanistica e scienze della pianificazione territoriale e ambientale</value>
+					<value>Laurea Triennale D.M. n. 509/1999 - classe 8 - Ingegneria Civile e Ambientale</value>
+					<value>Laurea Triennale D.M. n. 270/2004 - classe L-17 - Scienze dell’Architettura</value>
+					<value>Laurea Triennale D.M. n. 270/2004 - classe L-23 - Scienze e Tecniche dell’Edilizia</value>
+					<value>Laurea Triennale D.M. n. 270/2004 - classe L-21 - Scienze della Pianificazione territoriale, urbanistica, paesaggistica e ambientale</value>
+					<value>Laurea Triennale D.M. n. 270/2004 - classe L-7 - Ingegneria Civile e Ambientale</value>
+					<value>Laurea Specialistica D.M. n. 509/1999 - classe 3/S Architettura del paesaggio</value>
+					<value>Laurea Specialistica D.M. n. 509/1999 - classe 4/S - Architettura e Ingegneria Edile</value>
+					<value>Laurea Specialistica D.M. n. 509/1999 - classe 28/S - Ingegneria Civile</value>
+					<value>Laurea Specialistica D.M. n. 509/1999 - classe 38/S - Ingegneria per l’ambiente e il territorio</value>
+					<value>Laurea Specialistica D.M. n. 509/1999 - classe 54/S - Pianificazione territoriale urbanistica e ambientale</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-3- Architettura del paesaggio</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-4 - Architettura e ingegneria edile – architettura</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-23 - Ingegneria Civile</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-24 - Ingegneria dei sistemi edilizi</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-26 - Ingegneria della Sicurezza</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-35 - Ingegneria per l’ambiente e il territorio</value>
+					<value>Laurea Magistrale D.M. n. 270/2004 - classe LM-48 - Pianificazione territoriale urbanistica e ambientale</value>
+				</list>
+			</parameter>
+		</constraint>
+	</constraints>
+	<aspects>
+		<aspect name="jconon_application_lista_lauree:aspect_lauree">
+			<title>Lista Lauree</title>
+			<parent>jconon_application:aspects</parent>
+			<properties>
+				<property name="jconon_application_lista_lauree:laurea">
+					<title>Laurea</title>
+					<description>1)</description>
+					<type>d:text</type>
+					<mandatory>true</mandatory>
+					<multiple>true</multiple>
+					<index enabled="true">
+						<atomic>true</atomic>
+						<stored>false</stored>
+						<tokenised>both</tokenised>
+					</index>
+					<constraints>
+						<constraint ref="jconon_application_lista_lauree:values" />
+					</constraints>
+				</property>
+				<property name="jconon_application_lista_lauree:istituto_laurea">
+					<title>Università Conseguimento </title>
+					<description>2) Università Conseguimento</description>
+					<type>d:text</type>
+					<mandatory>true</mandatory>
+					<index enabled="true">
+						<atomic>true</atomic>
+						<stored>false</stored>
+						<tokenised>both</tokenised>
+					</index>
+				</property>
+				<property name="jconon_application_lista_lauree:data_laurea">
+					<title>Data Conseguimento </title>
+					<description>3) Data Conseguimento</description>
+					<type>d:datetime</type>
+					<mandatory>true</mandatory>
+				</property>
+				<property name="jconon_application_lista_lauree:tipo_laurea">
+					<title>Voto XXX/XXX</title>
+					<description>4) Voto</description>
+					<type>d:text</type>
+					<mandatory>true</mandatory>
+					<index enabled="true">
+						<atomic>true</atomic>
+						<stored>false</stored>
+						<tokenised>both</tokenised>
+					</index>
+				</property>
+			</properties>
+		</aspect>
+	</aspects>
+</model>
