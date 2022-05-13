@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model xmlns="http://www.alfresco.org/model/dictionary/1.0" name="jconon_dsa:jconon_dsaModel">
+    <description>JCONON dsa Model</description>
+    <version>1.0</version>
+    <imports>
+        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+        <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+        <import uri="http://www.cnr.it/model/jconon_application/cmis" prefix="jconon_application" />
+    </imports>
+    <namespaces>
+        <namespace uri="http://www.cittametropolitanaroma.it/model/jconon_dsa/cmis" prefix="jconon_dsa"/>
+    </namespaces>
+    <aspects>
+        <aspect name="jconon_dsa:aspect_dsa">
+            <title>Certificazione dsa con tempi aggiuntivi</title>
+            <parent>jconon_application:aspects</parent>
+            <properties>
+                <property name="jconon_dsa:fl_dsa">
+                    <title>Di essere affetto da disturbi specifici dell’apprendimento (allegare dichiarazione resa dalla commissione medico-legale dell’ASL di riferimento o da equivalente struttura pubblica).</title>
+                    <description>1)</description>
+                    <type>d:boolean</type>
+                    <mandatory>false</mandatory>
+                </property>
+                <property name="jconon_dsa:prove_dsa">
+                    <title>Prove Sostitutive</title>
+                    <description>2) class:fl_dsa_true  ui.radio</description>
+                    <type>d:boolean</type>
+                    <mandatory>true</mandatory>
+                </property>
+                <property name="jconon_dsa:strumenti_dsa">
+                    <title>Strumenti compensativi</title>
+                    <description>3) class:fl_dsa_true  ui.radio</description>
+                    <type>d:boolean</type>
+                    <mandatory>true</mandatory>
+                </property>
+                <property name="jconon_dsa:tempi_dsa">
+                    <title>Tempi Aggiuntivi</title>
+                    <description>4) class:fl_dsa_true  ui.radio</description>
+                    <type>d:boolean</type>
+                    <mandatory>true</mandatory>
+                </property>
+            </properties>
+        </aspect>
+    </aspects>
+</model>
