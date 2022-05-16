@@ -103,7 +103,7 @@
 					<type>d:datetime</type>
 					<mandatory>true</mandatory>
 				</property>
-				<property name="jconon_application_lista_lauree:tipo_laurea">
+				<property name="jconon_application_lista_lauree:voto_laurea">
 					<title>Voto XXX/XXX</title>
 					<description>4) Voto</description>
 					<type>d:text</type>
