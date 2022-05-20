@@ -137,7 +137,7 @@ public class PreganziolCallService extends CallService {
                         properties.put(JCONONPropertyIds.PROTOCOLLO_DATA.value(), dataFineDomande);
                         domanda.updateProperties(properties);
 
-                        Thread.sleep(3000);
+                        //Thread.sleep(3000);
 		        final Document printApplicationUpdated = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));	
                         final String subject = i18NService.getLabel(
                                 "subject.protocol.application",
