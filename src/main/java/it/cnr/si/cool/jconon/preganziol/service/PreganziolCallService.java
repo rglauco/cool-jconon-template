@@ -3,6 +3,7 @@ package it.cnr.si.cool.jconon.preganziol.service;
 import it.cnr.cool.mail.model.AttachmentBean;
 import it.cnr.cool.mail.model.EmailMessage;
 import it.cnr.cool.security.service.impl.alfresco.CMISUser;
+import it.cnr.si.cool.jconon.repository.ProtocolRepository;
 //import it.cnr.si.cool.jconon.agid.config.ProtocolloClient;
 import it.cnr.si.cool.jconon.cmis.model.JCONONDocumentType;
 import it.cnr.si.cool.jconon.cmis.model.JCONONFolderType;
@@ -34,6 +35,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Primary
 @Service
@@ -57,13 +61,14 @@ public class PreganziolCallService extends CallService {
  */
     private static final Logger LOGGER = LoggerFactory.getLogger(PreganziolCallService.class);
 
-    @Autowired
+    //@Autowired
     //private ProtocolloClient protocolloClient;
-
+    @Autowired
+    protected ProtocolRepository protocolRepository;   
     @Value("${mail.protocol.to}")
     private String mailProtocol;
-    @Value("${protocollo.enable}")
-    private Boolean protocolloEnable;
+    //@Value("${protocollo.enable}")
+    //private Boolean protocolloEnable;
 
     @Override
     public void protocolApplication(Session session) {
@@ -89,6 +94,7 @@ public class PreganziolCallService extends CallService {
 
     public void protocolApplication(Session session, Folder call) {
         LOGGER.info("Start protocol application for call {}", call.getName());
+	Calendar dataFineDomande = (Calendar) call.getProperty(JCONONPropertyIds.CALL_DATA_FINE_INVIO_DOMANDE.value()).getFirstValue();
         SecondaryType objectTypeProtocollo = (SecondaryType) session.getTypeDefinition(JCONONPolicyType.JCONON_PROTOCOLLO.value());
         ItemIterable<QueryResult> domande = getApplicationConfirmed(session, call);
         final long totalNumItems = domande.getTotalNumItems();
@@ -96,6 +102,46 @@ public class PreganziolCallService extends CallService {
             mailService.sendErrorMessage("protocol", "ERROR SOLR", "For call " + call.getName());
         }
         if (totalNumItems != 0) {
+	    long numProtocollo = protocolRepository.getNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)));
+            try {
+                List<Folder> applications = StreamSupport.stream(call.getChildren().spliterator(), false)
+                        .filter(cmisObject -> cmisObject.getType().getId().equals(JCONONFolderType.JCONON_APPLICATION.value()))
+                        .filter(cmisObject -> cmisObject.getPropertyValue(
+                                JCONONPropertyIds.APPLICATION_STATO_DOMANDA.value()).equals(ApplicationService.StatoDomanda.CONFERMATA.getValue()))
+                        .filter(Folder.class::isInstance)
+                        .map(Folder.class::cast)
+                        .collect(Collectors.toList());
+                for (Folder domanda : applications) {
+                    List<SecondaryType> secondaryTypes = domanda.getSecondaryTypes();
+                    if (secondaryTypes.contains(objectTypeProtocollo))
+                        continue;
+                    numProtocollo++;
+                    LOGGER.info("Start protocol application {} with protocol: {}", domanda.getName(), numProtocollo);
+                    try {
+                        printService.addProtocolToApplication(
+                                (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION)),
+                                numProtocollo,
+                                dataFineDomande.getTime());
+                        Map<String, Object> properties = new HashMap<String, Object>();
+                        List<String> secondaryTypesId = new ArrayList<String>();
+                        for (SecondaryType secondaryType : secondaryTypes) {
+                            secondaryTypesId.add(secondaryType.getId());
+                        }
+                        secondaryTypesId.add(objectTypeProtocollo.getId());
+                        properties.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secondaryTypesId);
+                        properties.put(JCONONPropertyIds.PROTOCOLLO_NUMERO.value(), String.format("%7s", numProtocollo).replace(' ', '0'));
+                        properties.put(JCONONPropertyIds.PROTOCOLLO_DATA.value(), dataFineDomande);
+                        domanda.updateProperties(properties);
+                    } catch (Exception e) {
+                        numProtocollo--;
+                        LOGGER.error("Cannot add protocol to application", e);
+                    }
+                }
+            } catch (Exception _ex) {
+                LOGGER.error("Cannot add protocol to application", _ex);
+            } finally {
+                protocolRepository.putNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)), numProtocollo);
+            }
             try {
                 OperationContext operationContext = OperationContextUtils.copyOperationContext(session.getDefaultContext());
                 operationContext.setOrderBy(PropertyIds.LAST_MODIFICATION_DATE);
@@ -112,11 +158,11 @@ public class PreganziolCallService extends CallService {
                     List<SecondaryType> secondaryTypes = domanda.getSecondaryTypes();
                     if (secondaryTypes.contains(objectTypeProtocollo))
                         continue;
-                    LOGGER.info("Start protocol application {} ", domanda.getName());
+                    LOGGER.info("Start mail protocol application {} ", domanda.getName());
                     try {
                         Map<String, Object> properties = new HashMap<String, Object>();
-                        List<String> secondaryTypesId = new ArrayList<String>();
-                        final Document printApplication = (Document) session.getObject(
+			List<String> secondaryTypesId = new ArrayList<String>();
+			final Document printApplication = (Document) session.getObject(
                                 competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION)
                         );
                         final String subject = i18NService.getLabel(
@@ -135,41 +181,6 @@ public class PreganziolCallService extends CallService {
                                         .concat(domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_COGNOME.value())).toUpperCase(),
                                 domanda.getPropertyValue(PropertyIds.OBJECT_ID)
                         );
-                        /*if (protocolloEnable) {
-                            final ResponseType responseType = protocolloClient.protocolla(
-                                    subject,
-                                    sender,
-                                    printApplication.getName(),
-                                    IOUtils.toByteArray(printApplication.getContentStream().getStream())
-                            );
-                            if (responseType.getEsito().equalsIgnoreCase("0000")) {
-                                final Long numeroProtocollo = Long.valueOf(responseType.getNumeroProtocollo().getValue());
-                                final LocalDate dataProtocollo = LocalDate.parse(
-                                        responseType.getDataProtocollo().getValue(),
-                                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                                );
-                                final File tempFile = File.createTempFile("protocollo", "pdf");
-                                URL protocolloURL = new URL(responseType.getUrlDocumento().getValue());
-                                FileUtils.copyURLToFile(protocolloURL, tempFile);
-
-                                ContentStreamImpl contentStream = new ContentStreamImpl();
-                                contentStream.setStream(new FileInputStream(tempFile));
-                                contentStream.setMimeType(printApplication.getContentStreamMimeType());
-                                contentStream.setFileName(printApplication.getContentStreamFileName());
-                                printApplication.setContentStream(contentStream, true, true);
-
-                                properties.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secondaryTypesId);
-                                properties.put(JCONONPropertyIds.PROTOCOLLO_NUMERO.value(), String.format("%7s", numeroProtocollo).replace(' ', '0'));
-                                properties.put(
-                                        JCONONPropertyIds.PROTOCOLLO_DATA.value(),
-                                        GregorianCalendar.from(dataProtocollo.atStartOfDay().atZone(ZoneId.systemDefault()))
-                                );
-                            } else {
-                                throw new IllegalArgumentException(responseType.getDescrizioneEsito());
-                            }
-                        } else {
-
-                         */
                         EmailMessage message = new EmailMessage();
                         message.setHtmlBody(Boolean.TRUE);
                         message.setRecipients(Collections.singletonList(mailProtocol));
@@ -182,21 +193,21 @@ public class PreganziolCallService extends CallService {
                         message.setSender(sender);
                         mailService.send(message);
 
-                        for (SecondaryType secondaryType : secondaryTypes) {
-                            secondaryTypesId.add(secondaryType.getId());
-                        }
-                        secondaryTypesId.add(objectTypeProtocollo.getId());
-                        properties.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secondaryTypesId);
-                        domanda.updateProperties(properties);
+                        //for (SecondaryType secondaryType : secondaryTypes) {
+                        //    secondaryTypesId.add(secondaryType.getId());
+                        //}
+                        //secondaryTypesId.add(objectTypeProtocollo.getId());
+                        //properties.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secondaryTypesId);
+                        //domanda.updateProperties(properties);
 
                     } catch (Exception e) {
-                        LOGGER.error("Cannot add protocol to application", e);
+                        LOGGER.error("Cannot add mail protocol to application", e);
                     }
                 }
             } catch (Exception _ex) {
-                LOGGER.error("Cannot add protocol to application", _ex);
+                LOGGER.error("Cannot add mail protocol to application", _ex);
             }
         }
-        LOGGER.info("End protocol application for call {}", call.getName());
+	LOGGER.info("End protocol application for call {}", call.getName());
     }
 }
