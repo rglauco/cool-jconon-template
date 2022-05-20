@@ -4,6 +4,7 @@ import it.cnr.cool.mail.model.AttachmentBean;
 import it.cnr.cool.mail.model.EmailMessage;
 import it.cnr.cool.security.service.impl.alfresco.CMISUser;
 import it.cnr.si.cool.jconon.repository.ProtocolRepository;
+//import it.cnr.si.cool.jconon.agid.config.ProtocolloClient;
 import it.cnr.si.cool.jconon.cmis.model.JCONONDocumentType;
 import it.cnr.si.cool.jconon.cmis.model.JCONONFolderType;
 import it.cnr.si.cool.jconon.cmis.model.JCONONPolicyType;
@@ -117,8 +118,12 @@ public class PreganziolCallService extends CallService {
                     numProtocollo++;
                     LOGGER.info("Start protocol application {} with protocol: {}", domanda.getName(), numProtocollo);
                     try {
+			final Document printApplication = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));
+			final CMISUser cmisUser = userService.loadUserForConfirm(
+                            domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_USER.value())
+	                );
                         printService.addProtocolToApplication(
-                                (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION)),
+                                printApplication,
                                 numProtocollo,
                                 dataFineDomande.getTime());
                         Map<String, Object> properties = new HashMap<String, Object>();
@@ -131,39 +136,9 @@ public class PreganziolCallService extends CallService {
                         properties.put(JCONONPropertyIds.PROTOCOLLO_NUMERO.value(), String.format("%7s", numProtocollo).replace(' ', '0'));
                         properties.put(JCONONPropertyIds.PROTOCOLLO_DATA.value(), dataFineDomande);
                         domanda.updateProperties(properties);
-                    } catch (Exception e) {
-                        numProtocollo--;
-                        LOGGER.error("Cannot add protocol to application", e);
-                    }
-                }
-            } catch (Exception _ex) {
-                LOGGER.error("Cannot add protocol to application", _ex);
-            } finally {
-                protocolRepository.putNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)), numProtocollo);
-            }
-            try {
-                OperationContext operationContext = OperationContextUtils.copyOperationContext(session.getDefaultContext());
-                operationContext.setOrderBy(PropertyIds.LAST_MODIFICATION_DATE);
-                for (CmisObject cmisObject : call.getChildren(operationContext).getPage(Integer.MAX_VALUE)) {
-                    if (!cmisObject.getType().getId().equals(JCONONFolderType.JCONON_APPLICATION.value()) ||
-                            !cmisObject.getPropertyValue(
-                                    JCONONPropertyIds.APPLICATION_STATO_DOMANDA.value()).equals(ApplicationService.StatoDomanda.CONFERMATA.getValue())) {
-                        continue;
-                    }
-                    Folder domanda = (Folder) cmisObject;
-                    final CMISUser cmisUser = userService.loadUserForConfirm(
-                            domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_USER.value())
-                    );
-                    List<SecondaryType> secondaryTypes = domanda.getSecondaryTypes();
-                    if (secondaryTypes.contains(objectTypeProtocollo))
-                        continue;
-                    LOGGER.info("Start mail protocol application {} ", domanda.getName());
-                    try {
-                        Map<String, Object> properties = new HashMap<String, Object>();
-			List<String> secondaryTypesId = new ArrayList<String>();
-			final Document printApplication = (Document) session.getObject(
-                                competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION)
-                        );
+
+                        Thread.sleep(3000);
+		        final Document printApplicationUpdated = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));	
                         final String subject = i18NService.getLabel(
                                 "subject.protocol.application",
                                 Locale.ITALIAN,
@@ -186,27 +161,22 @@ public class PreganziolCallService extends CallService {
                         message.setSubject(subject);
                         message.setBody(body);
                         message.setAttachments(Arrays.asList(new AttachmentBean(
-                                printApplication.getName(),
-                                IOUtils.toByteArray(printApplication.getContentStream().getStream())
-                        )));
+                                printApplicationUpdated.getName(),
+                                IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
                         message.setSender(sender);
                         mailService.send(message);
 
-                        //for (SecondaryType secondaryType : secondaryTypes) {
-                        //    secondaryTypesId.add(secondaryType.getId());
-                        //}
-                        //secondaryTypesId.add(objectTypeProtocollo.getId());
-                        //properties.put(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, secondaryTypesId);
-                        //domanda.updateProperties(properties);
-
                     } catch (Exception e) {
-                        LOGGER.error("Cannot add mail protocol to application", e);
+                        numProtocollo--;
+                        LOGGER.error("Cannot add protocol to application", e);
                     }
                 }
             } catch (Exception _ex) {
-                LOGGER.error("Cannot add mail protocol to application", _ex);
+                LOGGER.error("Cannot add protocol to application", _ex);
+            } finally {
+                protocolRepository.putNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)), numProtocollo);
             }
-        }
+       }
 	LOGGER.info("End protocol application for call {}", call.getName());
     }
 }
