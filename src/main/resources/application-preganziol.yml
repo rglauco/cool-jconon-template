@@ -1,0 +1,178 @@
+security:
+  enable-csrf: true
+
+cookie:
+  secure: true
+
+hazelcast.port: 5601
+hazelcast:
+  members: 127.0.0.1
+  port:
+    autoincrement: false
+  multicast:
+    port: 56327
+  instance:
+    name: jconon
+  mancenter: http://127.0.0.1
+
+
+server:
+  servlet:
+    context-path: /jconon
+
+ajp:
+  port: 8009
+  timeout: 120000
+
+ipa:
+  url:
+    base: https://www.indicepa.gov.it/public-services/opendata-read-service.php
+    amministrazioni: ${ipa.url.base}?dstype=FS&filename=amministrazioni.txt
+
+org:
+  apache:
+    chemistry:
+      opencmis:
+        binding:
+          atompub:
+            url: ${repository.base.url}api/-default-/public/cmis/versions/1.1/atom
+          browser:
+            url: ${repository.base.url}api/-default-/public/cmis/versions/1.1/browser
+          clientcompression: false
+          compression: true
+          spi:
+            type: browser
+          connecttimeout: 50000
+          readtimeout: 3000000
+          httpinvoker:
+            classname: org.apache.chemistry.opencmis.client.bindings.spi.http.DefaultHttpInvoker
+        session:
+          repository:
+            id: -default-
+
+oil:
+  url: http://helpdesk:8080/rest
+  instance: HDConcorsi
+  username: admin
+  password: admin
+  newuser:
+    password: 89b228a7d4a5a513c2868dd325c07965
+    profilo: 2
+    struttura: 1
+    mailStop: n
+
+user:
+  guest:
+    username: jconon
+    password: jcononpw
+  admin:
+    username: admin
+    password: admin
+
+block:
+  submit:
+    employee: true
+#-----------------------------
+# Outbound Email Configuration
+#------------------------------
+mail:
+  protocol:
+    to: protocollo@comune.preganziol.tv.it
+  host: posta.comune.preganziol.tv.it
+  port: 25
+  username: 
+  password: 
+  smtp:
+    host: ${mail.host}
+    user: ${mail.username}
+    password: ${mail.password}
+    auth: true
+    starttls:
+      enable: false
+  encoding: UTF-8
+  from:
+    default: jconon@comune.preganziol.tv.it
+  admin: glauco.rampogna@comune.preganziol.tv.it
+  to:
+    error:
+      message: glauco.rampogna@comune.preganziol.tv.it
+  helpdesk: ced@comune.preganziol.tv.it
+  error:
+    enabled: true
+  create:
+    user:
+      bcc:
+        enabled: false
+attiva:
+  mail:
+    solleciti: false
+  protocol:
+    application: true
+
+rrd:
+  path: remote-shared,remote
+  skipmd5: false
+  excludefiles: rbac.get.json.ftl,categorie-helpdesk.get.json.ftl,protocollo.json
+
+rest:
+  cache:
+    control: 86400
+#-----------------------
+#Path di salvataggio Log
+#-----------------------
+dataDictionary:
+  path: /Data Dictionary
+
+rbac:
+  path: ${dataDictionary.path}/Web Applications/jconon/WEB-INF/classes/rbac.get.json.ftl
+protocol:
+  path: ${dataDictionary.path}/Web Applications/jconon/WEB-INF/classes/protocollo.json
+  register:
+    namespace: SEL - Preganziol - DOM
+
+#Tomcat
+server.tomcat.basedir: ./
+server.tomcat.access-log-enabled: false
+server.tomcat.access-log-pattern: '%h %l %u %t "%r" %s %b %D'
+
+shell.auth.simple.user.name: ${user.admin.username}
+shell.auth.simple.user.password: ${user.admin.password}
+
+pec:
+  mail:
+    hostImap: imaps.pec.aruba.it
+    hostSmtp: smtps.pec.aruba.it
+    url: imaps://${pec.mail.hostImap}
+    auth: true
+    sslEnable: true
+    port: 995
+    socketFactoryClass: javax.net.ssl.SSLSocketFactory
+    connectiontimeout: 5000
+    timeout: 5000
+
+io:
+  url: https://api.io.italia.it/api/v1
+  subscriptionkey: 
+
+anpr:
+  url: https://www.anpr.interno.it
+
+timer:
+  cron:
+    protocol: 0 5 13 * * *
+    notification: 0 0 13 * * *
+    evictscanpec: 0 0 4 * * *
+    verifypec: 0 0/30 * * * *
+
+multipart:
+  resolver:
+    max:
+      upload:
+        size: 262144000
+    default:
+      upload:
+        size: 15360000
+
+logging:
+  file:
+    path: log-jconon
