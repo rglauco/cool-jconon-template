@@ -4,7 +4,6 @@ import it.cnr.cool.mail.model.AttachmentBean;
 import it.cnr.cool.mail.model.EmailMessage;
 import it.cnr.cool.security.service.impl.alfresco.CMISUser;
 import it.cnr.si.cool.jconon.repository.ProtocolRepository;
-//import it.cnr.si.cool.jconon.agid.config.ProtocolloClient;
 import it.cnr.si.cool.jconon.cmis.model.JCONONDocumentType;
 import it.cnr.si.cool.jconon.cmis.model.JCONONFolderType;
 import it.cnr.si.cool.jconon.cmis.model.JCONONPolicyType;
@@ -43,30 +42,32 @@ import java.util.stream.StreamSupport;
 @Service
 public class PreganziolCallService extends CallService {
 
-/*
- * Copyright (C) 2021  Consiglio Nazionale delle Ricerche
- *
- *      This program is free software: you can redistribute it and/or modify
- *      it under the terms of the GNU Affero General Public License as
- *      published by the Free Software Foundation, either version 3 of the
- *      License, or (at your option) any later version.
- *
- *      This program is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
- *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *      GNU Affero General Public License for more details.
- *
- *      You should have received a copy of the GNU Affero General Public License
- *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+    /*
+     * Copyright (C) 2021  Consiglio Nazionale delle Ricerche
+     *
+     *      This program is free software: you can redistribute it and/or modify
+     *      it under the terms of the GNU Affero General Public License as
+     *      published by the Free Software Foundation, either version 3 of the
+     *      License, or (at your option) any later version.
+     *
+     *      This program is distributed in the hope that it will be useful,
+     *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+     *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     *      GNU Affero General Public License for more details.
+     *
+     *      You should have received a copy of the GNU Affero General Public License
+     *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(PreganziolCallService.class);
 
     //@Autowired
     //private ProtocolloClient protocolloClient;
     @Autowired
-    protected ProtocolRepository protocolRepository;   
+    protected ProtocolRepository protocolRepository;
     @Value("${mail.protocol.to}")
     private String mailProtocol;
+    @Value("${mail.from.default}")
+    private String defaultSender;
     //@Value("${protocollo.enable}")
     //private Boolean protocolloEnable;
 
@@ -94,7 +95,7 @@ public class PreganziolCallService extends CallService {
 
     public void protocolApplication(Session session, Folder call) {
         LOGGER.info("Start protocol application for call {}", call.getName());
-	Calendar dataFineDomande = (Calendar) call.getProperty(JCONONPropertyIds.CALL_DATA_FINE_INVIO_DOMANDE.value()).getFirstValue();
+        Calendar dataFineDomande = (Calendar) call.getProperty(JCONONPropertyIds.CALL_DATA_FINE_INVIO_DOMANDE.value()).getFirstValue();
         SecondaryType objectTypeProtocollo = (SecondaryType) session.getTypeDefinition(JCONONPolicyType.JCONON_PROTOCOLLO.value());
         ItemIterable<QueryResult> domande = getApplicationConfirmed(session, call);
         final long totalNumItems = domande.getTotalNumItems();
@@ -102,7 +103,7 @@ public class PreganziolCallService extends CallService {
             mailService.sendErrorMessage("protocol", "ERROR SOLR", "For call " + call.getName());
         }
         if (totalNumItems != 0) {
-	    long numProtocollo = protocolRepository.getNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)));
+            long numProtocollo = protocolRepository.getNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)));
             try {
                 List<Folder> applications = StreamSupport.stream(call.getChildren().spliterator(), false)
                         .filter(cmisObject -> cmisObject.getType().getId().equals(JCONONFolderType.JCONON_APPLICATION.value()))
@@ -118,10 +119,10 @@ public class PreganziolCallService extends CallService {
                     numProtocollo++;
                     LOGGER.info("Start protocol application {} with protocol: {}", domanda.getName(), numProtocollo);
                     try {
-			final Document printApplication = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));
-			final CMISUser cmisUser = userService.loadUserForConfirm(
-                            domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_USER.value())
-	                );
+                        final Document printApplication = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));
+                        final CMISUser cmisUser = userService.loadUserForConfirm(
+                                domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_USER.value())
+                        );
                         printService.addProtocolToApplication(
                                 printApplication,
                                 numProtocollo,
@@ -138,7 +139,7 @@ public class PreganziolCallService extends CallService {
                         domanda.updateProperties(properties);
 
                         //Thread.sleep(3000);
-		        final Document printApplicationUpdated = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));	
+                        final Document printApplicationUpdated = (Document) session.getObject(competitionService.findAttachmentId(session, domanda.getId(), JCONONDocumentType.JCONON_ATTACHMENT_APPLICATION));
                         final String subject = i18NService.getLabel(
                                 "subject.protocol.application",
                                 Locale.ITALIAN,
@@ -155,16 +156,27 @@ public class PreganziolCallService extends CallService {
                                         .concat(domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_COGNOME.value())).toUpperCase(),
                                 domanda.getPropertyValue(PropertyIds.OBJECT_ID)
                         );
-                        EmailMessage message = new EmailMessage();
-                        message.setHtmlBody(Boolean.TRUE);
-                        message.setRecipients(Collections.singletonList(mailProtocol));
-                        message.setSubject(subject);
-                        message.setBody(body);
-                        message.setAttachments(Arrays.asList(new AttachmentBean(
+                        EmailMessage msgToProtocol = new EmailMessage();
+                        msgToProtocol.setHtmlBody(Boolean.TRUE);
+                        msgToProtocol.setRecipients(Collections.singletonList(mailProtocol));
+                        msgToProtocol.setSubject(subject);
+                        msgToProtocol.setBody(body);
+                        msgToProtocol.setAttachments(Arrays.asList(new AttachmentBean(
                                 printApplicationUpdated.getName(),
                                 IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
-                        message.setSender(sender);
-                        mailService.send(message);
+                        msgToProtocol.setSender(sender);
+                        mailService.send(msgToProtocol);
+
+                        EmailMessage msgToCandidate = new EmailMessage();
+                        msgToCandidate.setHtmlBody(Boolean.TRUE);
+                        msgToCandidate.setRecipients(Collections.singletonList(sender));
+                        msgToCandidate.setSubject(subject);
+                        msgToCandidate.setBody(body);
+                        msgToCandidate.setAttachments(Arrays.asList(new AttachmentBean(
+                                printApplicationUpdated.getName(),
+                                IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
+                        msgToCandidate.setSender(defaultSender);
+                        mailService.send(msgToCandidate);
 
                     } catch (Exception e) {
                         numProtocollo--;
@@ -176,7 +188,7 @@ public class PreganziolCallService extends CallService {
             } finally {
                 protocolRepository.putNumProtocollo(ProtocolRepository.ProtocolRegistry.DOM.name(), String.valueOf(dataFineDomande.get(Calendar.YEAR)), numProtocollo);
             }
-       }
-	LOGGER.info("End protocol application for call {}", call.getName());
+        }
+        LOGGER.info("End protocol application for call {}", call.getName());
     }
 }
