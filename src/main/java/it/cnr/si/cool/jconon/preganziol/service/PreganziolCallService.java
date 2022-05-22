@@ -154,6 +154,7 @@ public class PreganziolCallService extends CallService {
                                 domanda.<String>getPropertyValue(JCONONPropertyIds.APPLICATION_NOME.value())
                                         .concat(" ")
                                         .concat(domanda.getPropertyValue(JCONONPropertyIds.APPLICATION_COGNOME.value())).toUpperCase(),
+                                String.format("%7s", numProtocollo).replace(' ', '0')
                                 domanda.getPropertyValue(PropertyIds.OBJECT_ID)
                         );
                         EmailMessage msgToProtocol = new EmailMessage();
