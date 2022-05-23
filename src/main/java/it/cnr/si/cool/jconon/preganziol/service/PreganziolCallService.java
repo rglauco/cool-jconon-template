@@ -162,9 +162,21 @@ public class PreganziolCallService extends CallService {
                         msgToProtocol.setRecipients(Collections.singletonList(mailProtocol));
                         msgToProtocol.setSubject(subject);
                         msgToProtocol.setBody(body);
-                        msgToProtocol.setAttachments(Arrays.asList(new AttachmentBean(
-                                printApplicationUpdated.getName(),
-                                IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
+                        msgToProtocol.setAttachments(
+                            StreamSupport.stream(domanda.getChildren().spliterator(), false)
+                                .filter(Document.class::isInstance)
+                                .map(Document.class::cast)
+                                .map(document -> {
+                                        try {
+                                                LOGGER.info("allegato: {}:", document.getName());
+                                                return new AttachmentBean(
+                                                                document.getName(),
+                                                                IOUtils.toByteArray(document.getContentStream().getStream()));
+                                        } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                        }
+                                }).collect(Collectors.toList()));
+
                         msgToProtocol.setSender(sender);
                         mailService.send(msgToProtocol);
 
