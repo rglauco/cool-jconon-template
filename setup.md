@@ -280,5 +280,5 @@ dentro la sezione `server {`:
 ```
 e riavviare il container per applicare il nuovo file di configurazione.
 
-D'ora in poi basterà rinominare `manutenzione_off.html` in `manutenzione_on.html` e nginx lascerà passare solo gli ip autorizzati, mostrando la pagina di manutenzione customizzata.
+D'ora in poi basterà rinominare `manutenzione_off.html` in `manutenzione_on.html` e nginx lascerà passare solo gli ip autorizzati, mentre a tutti gli altri mostrerà la pagina di manutenzione customizzata.
 *Credits*: https://dev.to/shano/easy-maintenance-mode-with-nginx-2c6g
