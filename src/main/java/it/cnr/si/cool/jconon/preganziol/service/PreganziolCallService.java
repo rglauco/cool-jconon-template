@@ -198,7 +198,7 @@ public class PreganziolCallService extends CallService {
                             msgToCandidate.setSender(defaultSender);
                             mailService.send(msgToCandidate);
                         } catch (MailException e) {
-                            LOGGER.error("Cannot mail application to condidate", e);
+                            LOGGER.error("Cannot mail application to candidate", e);
                         }
 
                     } catch (Exception e) {
