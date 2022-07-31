@@ -158,39 +158,47 @@ public class PreganziolCallService extends CallService {
                                 String.format("%7s", numProtocollo).replace(' ', '0'),
                                 domanda.getPropertyValue(PropertyIds.OBJECT_ID)
                         );
-                        EmailMessage msgToProtocol = new EmailMessage();
-                        msgToProtocol.setHtmlBody(Boolean.TRUE);
-                        msgToProtocol.setRecipients(Collections.singletonList(mailProtocol));
-                        msgToProtocol.setSubject(subject);
-                        msgToProtocol.setBody(body);
-                        msgToProtocol.setAttachments(
-                            StreamSupport.stream(domanda.getChildren().spliterator(), false)
-                                .filter(Document.class::isInstance)
-                                .map(Document.class::cast)
-                                .map(document -> {
-                                        try {
-                                                LOGGER.info("allegato: {}:", document.getName());
-                                                return new AttachmentBean(
-                                                                document.getName(),
-                                                                IOUtils.toByteArray(document.getContentStream().getStream()));
-                                        } catch (IOException e) {
-                                                throw new RuntimeException(e);
-                                        }
-                                }).collect(Collectors.toList()));
+                        try {
+                            EmailMessage msgToProtocol = new EmailMessage();
+                            msgToProtocol.setHtmlBody(Boolean.TRUE);
+                            msgToProtocol.setRecipients(Collections.singletonList(mailProtocol));
+                            msgToProtocol.setSubject(subject);
+                            msgToProtocol.setBody(body);
+                            msgToProtocol.setAttachments(
+                                StreamSupport.stream(domanda.getChildren().spliterator(), false)
+                                    .filter(Document.class::isInstance)
+                                    .map(Document.class::cast)
+                                    .map(document -> {
+                                            try {
+                                                    LOGGER.info("allegato: {}:", document.getName());
+                                                    return new AttachmentBean(
+                                                                    document.getName(),
+                                                                    IOUtils.toByteArray(document.getContentStream().getStream()));
+                                            } catch (IOException e) {
+                                                    throw new RuntimeException(e);
+                                            }
+                                    }).collect(Collectors.toList()));
 
-                        msgToProtocol.setSender(sender);
-                        mailService.send(msgToProtocol);
-
-                        EmailMessage msgToCandidate = new EmailMessage();
-                        msgToCandidate.setHtmlBody(Boolean.TRUE);
-                        msgToCandidate.setRecipients(Collections.singletonList(sender));
-                        msgToCandidate.setSubject(subject);
-                        msgToCandidate.setBody(body);
-                        msgToCandidate.setAttachments(Arrays.asList(new AttachmentBean(
-                                printApplicationUpdated.getName(),
-                                IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
-                        msgToCandidate.setSender(defaultSender);
-                        mailService.send(msgToCandidate);
+                            msgToProtocol.setSender(sender);
+                            mailService.send(msgToProtocol);
+                        } catch (Exception e) {
+                            LOGGER.error("Cannot mail application to protocol", e);
+                        }
+                    
+                        try {
+                            EmailMessage msgToCandidate = new EmailMessage();
+                            msgToCandidate.setHtmlBody(Boolean.TRUE);
+                            msgToCandidate.setRecipients(Collections.singletonList(sender));
+                            msgToCandidate.setSubject(subject);
+                            msgToCandidate.setBody(body);
+                            msgToCandidate.setAttachments(Arrays.asList(new AttachmentBean(
+                                    printApplicationUpdated.getName(),
+                                    IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
+                            msgToCandidate.setSender(defaultSender);
+                            mailService.send(msgToCandidate);
+                        } catch (Exception e) {
+                            LOGGER.error("Cannot mail application to condidate", e);
+                        }
 
                     } catch (Exception e) {
                         numProtocollo--;
