@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.MailException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -181,7 +182,7 @@ public class PreganziolCallService extends CallService {
 
                             msgToProtocol.setSender(sender);
                             mailService.send(msgToProtocol);
-                        } catch (Exception e) {
+                        } catch (MailException e) {
                             LOGGER.error("Cannot mail application to protocol", e);
                         }
                     
@@ -196,7 +197,7 @@ public class PreganziolCallService extends CallService {
                                     IOUtils.toByteArray(printApplicationUpdated.getContentStream().getStream()))));
                             msgToCandidate.setSender(defaultSender);
                             mailService.send(msgToCandidate);
-                        } catch (Exception e) {
+                        } catch (MailException e) {
                             LOGGER.error("Cannot mail application to condidate", e);
                         }
 
