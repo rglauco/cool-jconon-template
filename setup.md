@@ -222,6 +222,9 @@ e riavviare docker:
 systemctl --user daemon-reload
 systemctl --user restart docker
 ```
+**PER IMPOSTARE LIMITI CPU, RAM**
+
+Per utilizzare `deploy.resources.limits.{cpus,memory}` in modalità rootless, è necessario attivare cgroups2: in sistemi Ubuntu aprire `/etc/default/grub` e valorizzare `GRUB_CMDLINE_LINUX` con `systemd.unified_cgroup_hierarchy=1`, poi dare `sudo update-grub` e riavviare.
 
 ## METTERE IN MANUTENZIONE JCONON (OPZIONALE)
 
