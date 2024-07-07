@@ -27,7 +27,7 @@
 
     <artifactId>cool-jconon-template</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Concorsi On-Line Template</name>
+    <name>Concorsi On-Line Preganziol</name>
 
     <properties>
         <cool.mode>development</cool.mode>
@@ -47,7 +47,7 @@
                     <artifactId>cool-jconon-keycloak</artifactId>
                 </exclusion>
             </exclusions>
-    	</dependency>
+        </dependency>
     </dependencies>
     <profiles>
         <profile>
@@ -195,7 +195,7 @@
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
-                            <Dependencies>org.dom4j,javax.mail.api</Dependencies>      
+                            <Dependencies>org.dom4j,javax.mail.api</Dependencies>
                             <Specification-Title>${project.name}</Specification-Title>
                             <Specification-Version>${project.version}</Specification-Version>
                             <Implementation-Version>${project.version}</Implementation-Version>
